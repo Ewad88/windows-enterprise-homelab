@@ -1,0 +1,36 @@
+# Windows operating system files
+Thumbs.db
+Desktop.ini
+*.lnk
+
+# Editor and temporary files
+.vscode/
+*.tmp
+*.bak
+*.log
+
+# Hyper-V virtual machines and installation media
+*.vhd
+*.vhdx
+*.avhdx
+*.iso
+*.vmcx
+*.vmrs
+
+# Backups and recovery data
+backups/
+*.wbcat
+*.bkf
+
+# Credentials and private keys
+.env
+.env.*
+*.pem
+*.pfx
+*.p12
+*.key
+id_ed25519
+id_rsa
+
+# PowerShell transcripts
+transcripts/
