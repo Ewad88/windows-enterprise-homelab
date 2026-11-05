@@ -11,13 +11,9 @@ All three storage volumes were configured with XTS-AES-256 encryption.
 ## Storage Security Architecture
 
 | Volume | Purpose | Encryption | Unlock Method |
-
 |---|---|---|---|
-
 | C: | Windows 11 Pro operating system | XTS-AES-256 | TPM |
-
 | D: | Hyper-V virtual machine storage | XTS-AES-256 | Automatic unlock |
-
 | E: | External offline backup storage | XTS-AES-256 | Password |
 
 ### Security Design Decisions
@@ -193,11 +189,8 @@ Protector types were verified without displaying sensitive recovery information:
 The resulting configuration included:
 
 | Protector | Purpose |
-
 |---|---|
-
 | `Tpm` | Unlocks the operating system volume during normal startup |
-
 | `RecoveryPassword` | Provides an independent recovery mechanism |
 
 ### Encryption Progress
@@ -221,15 +214,10 @@ Get-BitLockerVolume -MountPoint "C:" |
 After encryption finished, the operating system volume reported:
 
 | Property | Result |
-
 |---|---|
-
 | VolumeStatus | `FullyEncrypted` |
-
 | EncryptionPercentage | `100` |
-
 | ProtectionStatus | `On` |
-
 | EncryptionMethod | `XtsAes256` |
 
 ![Completed BitLocker encryption of the operating system volume](../../screenshots/security/05-system-drive-encryption-complete.png)
@@ -349,17 +337,11 @@ The `AutoUnlockEnabled` property returned `True`.
 After encryption completed, the Hyper-V storage volume reported:
 
 | Property | Result |
-
 |---|---|
-
 | VolumeStatus | `FullyEncrypted` |
-
 | EncryptionPercentage | `100` |
-
 | ProtectionStatus | `On` |
-
 | AutoUnlockEnabled | `True` |
-
 | EncryptionMethod | `XtsAes256` |
 
 ![Completed Hyper-V storage encryption](../../screenshots/security/10-hyperv-storage-encryption-complete.png)
@@ -493,17 +475,11 @@ Key protector types were verified without exposing recovery credentials:
 Final verification confirmed:
 
 | Property | Verified Result |
-
 |---|---|
-
 | VolumeStatus | `FullyEncrypted` |
-
 | EncryptionPercentage | `100` |
-
 | ProtectionStatus | `On` |
-
 | EncryptionMethod | `XtsAes256` |
-
 | Key Protectors | `Password`, `RecoveryPassword` |
 
 ![External backup drive BitLocker encryption validation](../../screenshots/security/01-bitlocker-backup-encryption-validation.png)
@@ -585,13 +561,9 @@ The ARGUS BitLocker deployment was completed and validated across the operating 
 ### Final Encryption Configuration
 
 | Volume | Encryption | Protection | Unlock Method | Validation |
-
 |---|---|---|---|---|
-
 | C: | XTS-AES-256 | On | TPM | Reboot successful |
-
 | D: | XTS-AES-256 | On | Auto-unlock | Reboot and VHDX access successful |
-
 | E: | XTS-AES-256 | On | Password | Disconnect and reconnect test successful |
 
 All three volumes reached `FullyEncrypted` status with `100` percent encryption completed.
