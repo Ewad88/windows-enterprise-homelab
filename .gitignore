@@ -34,3 +34,6 @@ id_rsa
 
 # PowerShell transcripts
 transcripts/
+
+# ARGUS machine-specific backup configuration
+scripts/backup/backup-config.local.ps1
