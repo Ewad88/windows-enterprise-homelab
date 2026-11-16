@@ -19,7 +19,17 @@ The workflow includes timestamped backup directories, disk identity verification
 
 ## Current Status
 
-Successful exports and VHDX validation have been demonstrated for both virtual machines. The configuration-loading mechanism has been independently tested. A full backup run using the revised configuration and a controlled restore test remain outstanding.
+Successful Hyper-V exports and VHDX validation have been demonstrated for both DC01 and CLIENT01.
+
+On November 16, 2026, controlled recovery tests were successfully performed for both virtual machines using exports created on November 11, 2026. Both VMs were imported as independent copies with new Hyper-V identifiers and successfully booted from recovered virtual disks stored on ARGUS.
+
+CLIENT01 recovery included successful Windows sign-in using cached domain credentials while isolated from the original domain network.
+
+DC01 recovery included successful Active Directory Domain Services and DNS startup, domain controller discovery, SYSVOL initialization, and targeted diagnostic validation. An isolated private Hyper-V network was required to restore DFS Replication configuration access. A Windows Time advertising warning remains documented for follow-up.
+
+These tests validate VM-level recovery from the existing exports, but do not constitute a complete Active Directory forest recovery test.
+
+The configuration-loading mechanism has been independently tested. A full backup run using the revised configuration remains outstanding.
 
 ## Environment
 
@@ -210,18 +220,77 @@ The current implementation has several intentional limitations:
 2. **Environment-specific configuration:** Some paths, drive properties, and virtual machine names are specific to ARGUS.
 3. **No automated retention:** Previous backup directories are not automatically deleted or rotated.
 4. **No automated scheduling:** Backups are initiated manually.
-5. **No complete recovery test:** A controlled restore has not yet been performed.
+5. **Recovery Scope:** Controlled VM-level recovery tests have been completed, but comprehensive Active Directory forest recovery and system-state restoration have not been tested.
 6. **No automated notifications:** Backup results are recorded locally rather than sent through email or another notification service.
 
 ### Recovery Testing
 
-A future recovery exercise will import an exported virtual machine into an isolated test environment.
+**Test date:** November 16, 2026
+**Backup source:** `E:\Hyper-V-Backups\2026-11-11_171954`
+**Recovery destination:** `D:\Hyper-V\RecoveryTests`
 
-The test will evaluate whether the restored VM can boot and whether its operating system and relevant services function correctly.
+Controlled recovery tests were performed for both CLIENT01 and DC01 using previously exported Hyper-V virtual machines. Each VM was imported using `Import-VM -Copy -GenerateNewId` to create an independent recovery instance without overwriting the original VM.
 
-Special care will be taken when testing DC01, since running a restored domain controller alongside the existing production homelab domain controller could introduce Active Directory and network conflicts.
+Recovered virtual disks were stored on ARGUS's internal storage, and both original VMs remained powered off throughout their respective recovery tests.
 
-Recovery testing will be documented separately, and this README will be updated with the results.
+#### CLIENT01 Recovery
+
+The Windows 11 Enterprise Evaluation client was restored as `CLIENT01-RECOVERY`.
+
+Validation included:
+
+- Successful Hyper-V import with a new VM identifier.
+- Verification of the independent recovered VHDX location.
+- Disconnection from the original domain network.
+- Successful Windows boot and interactive sign-in using cached domain credentials.
+- Verification of the guest hostname, domain membership configuration, and operating system build.
+- Graceful shutdown after testing.
+
+**Result:** VM-level recovery successful. Live domain authentication and domain connectivity were intentionally not tested.
+
+#### DC01 Recovery
+
+The Windows Server 2025 Evaluation domain controller was restored as `DC01-RECOVERY`.
+
+The recovered VM retained the original hostname, domain identity, and static IP address. It was never connected to the original `LAB-Internal` network.
+
+Validation included:
+
+- Successful Hyper-V import with a new VM identifier.
+- Verification of the independent recovered VHDX location.
+- Successful Windows Server boot and administrator sign-in.
+- Confirmation that Active Directory Domain Services (NTDS) and DNS services were running.
+- Observation of VM-Generation ID change detection and Active Directory recovery safeguards.
+- Successful domain controller discovery using `nltest /dsgetdc:corp.example.com`.
+- Successful DFS Replication configuration retrieval and SYSVOL initialization.
+- Verification of the SYSVOL and NETLOGON shares.
+- Verification of the Default Domain Policy and Default Domain Controllers Policy directories.
+- Successful `dcdiag` Connectivity and SysVolCheck tests.
+- Graceful shutdown after testing.
+
+#### DFS Replication Troubleshooting
+
+During the initial isolated boot, DFS Replication logged Event ID 1202 because it could not contact a domain controller to retrieve configuration information.
+
+A dedicated private Hyper-V switch named `RECOVERY-PRIVATE` was created, and only DC01-RECOVERY was connected to it. This provided an active network link without connecting the recovered domain controller to the original lab network.
+
+After restarting the recovered VM:
+
+- Event ID 1206 confirmed successful retrieval of Active Directory configuration.
+- Event ID 4602 confirmed successful SYSVOL initialization as the designated primary member.
+- Event ID 1210 confirmed successful initialization of the DFS Replication RPC listener.
+
+The recovery also triggered Active Directory VM-Generation ID safeguards, including an invocation ID change and SYSVOL recovery initialization.
+
+#### Remaining Findings and Limitations
+
+The `dcdiag` Advertising test reported that DC01 was not advertising as a time server. Windows Time reported an unsynchronized state while using the Hyper-V VM IC Time Synchronization Provider. This warning remains unresolved and is reserved for later investigation on the original DC01.
+
+These tests demonstrate successful restoration and targeted service validation from the existing Hyper-V exports. They do not establish complete Active Directory forest recovery, comprehensive Group Policy integrity, or successful recovery from every possible failure scenario.
+
+The exported backups were created before the revised configuration-loading mechanism was finalized. A complete backup execution using the revised configuration remains outstanding.
+
+**Overall result:** Both VM-level recovery tests completed successfully, with the Windows Time advertising warning and broader disaster-recovery limitations documented.
 
 ## Project Status
 
@@ -237,10 +306,18 @@ Recovery testing will be documented separately, and this README will be updated 
 
 - [x] Independently test local configuration loading and disk identifier matching.
 
+- [x] Perform a controlled CLIENT01 recovery test.
+
+- [x] Perform a controlled DC01 recovery test on an isolated private Hyper-V network.
+
+- [x] Validate recovered Active Directory services, domain controller discovery, and SYSVOL initialization.
+
+- [x] Document recovery procedures, diagnostic findings, and limitations.
+
 - [ ] Complete a full backup using the revised configuration.
 
-- [ ] Perform a controlled virtual machine recovery test.
+- [ ] Investigate the Windows Time advertising warning on the original DC01.
 
-- [ ] Document verified recovery procedures.
+- [ ] Develop and test an Active Directory-aware system-state backup and recovery procedure.
 
-**Important:** A successful backup export is not a substitute for a tested recovery procedure.
+**Important:** Successful Hyper-V exports and VM-level recovery tests do not replace Active-Directory-aware system-state backups or comprehensive disaster-recovery planning.
