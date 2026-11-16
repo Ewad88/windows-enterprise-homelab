@@ -28,23 +28,28 @@ The goal is to build, secure, document, and maintain an enterprise-style environ
 | Processor | AMD Ryzen 9 9955HX |
 | Memory | 64 GB RAM |
 | Virtualization Platform | Microsoft Hyper-V |
-| Domain Controller | DC01 |
-| Server Operating System | Windows Server 2025 Standard Evaluation |
+| Domain Controller | DC01 - Windows Server 2025 Standard Evaluation |
+| Domain-Joined Client | CLIENT01 - Windows 11 Enterprise Evaluation |
 | Active Directory Domain | corp.example.com |
 | Domain NetBIOS Name | CORP |
-| Hyper-V Virtual Switch | LAB-Internal |
+| Hyper-V Virtual Switch | LAB-Internal (Internal) |
+| Recovery Test Switch | RECOVERY-PRIVATE (Private) |
 | Host Lab IP | 10.50.10.1/24 |
 | Domain Controller IP | 10.50.10.10/24 |
 
-The lab uses an isolated Hyper-V internal virtual switch to separate domain infrastructure traffic from the host's normal internet connection.
+The primary lab uses an isolated Hyper-V internal virtual switch for communication between ARGUS and the domain environment.
+
+A separate private Hyper-V switch, RECOVERY-PRIVATE, supports isolated virtual machine recovery testing without connecting restored domain controllers to the original lab network.
 
 ### Storage Architecture
 
 | Volume | Purpose |
 |--------|---------|
-| C: | Windows host operating system and applications |
-| D: | Hyper-V virtual machines and virtual hard disks |
-| E: | External Seagate backup and recovery storage |
+| C: | Windows host operating system, applications, and project repositories |
+| D: | Hyper-V virtual machines, virtual hard disks, and recovery test storage |
+| E: | External Seagate USB SSD - BitLocker-encrypted offline backup storage |
+
+The external backup drive is disconnected when not actively performing backup or recovery operations.
 
 ## Active Directory Environment
 
@@ -90,15 +95,22 @@ Four fictional employee accounts have been provisioned and assigned to their res
 
 ## Security Implementation
 
-Security measures implemented or currently being developed include:
+The lab incorporates security controls designed to support least privilege, data protection, administrative accountability, and separation of production-like infrastructure from recovery testing.
 
-- Separation of standard-user and administrator accounts on ARGUS
-- Disabled built-in Windows Administrator account
-- Windows Hello PIN authentication for daily host access
-- Windows Defender Firewall rules restricting lab connectivity
-- SSH key authentication for GitHub
-- NTFS repository ownership and permission management
-- BitLocker encryption for host and backup storage (in progress)
+Implemented security measures include:
+
+- Separation of standard-user and privileged administrator accounts on ARGUS.
+- Disabled built-in Windows Administrator account.
+- Windows Hello PIN authentication for daily host access.
+- Windows Defender Firewall rules restricting lab connectivity.
+- Isolated Hyper-V networking for Active Directory infrastructure.
+- Dedicated private virtual networking for recovery testing.
+- SSH key-based authentication for GitHub.
+- NTFS repository ownership and permission management.
+- BitLocker encryption for the ARGUS host storage and external backup drive.
+- Offline backup storage disconnected when not in use.
+
+Additional Active Directory security hardening, Group Policy configuration, and centralized security auditing are planned.
 
 ### Administrative Account Separation
 
@@ -112,35 +124,68 @@ This configuration follows the principle of least privilege by separating everyd
 
 ## Backup and Recovery
 
-The lab uses a 2 TB external Seagate hard drive for offline backup storage.
+The lab implements a PowerShell-based Hyper-V backup workflow using a dedicated 2 TB external Seagate USB SSD protected by BitLocker XTS-AES-256 encryption.
 
-A Hyper-V export of DC01 has been created and its virtual disk validated.
+The backup process includes:
 
-Backup location:
+- Offline exports of DC01 and CLIENT01.
+- Backup destination identity and storage health verification.
+- BitLocker protection and available-space checks.
+- Virtual machine state validation.
+- Timestamped backup directories and persistent logging.
+- Exported VHDX validation using Hyper-V PowerShell cmdlets.
+- Local configuration separation to prevent machine-specific settings from being committed to GitHub.
+
+Backups are stored beneath:
 
 ```text
-E:\Hyper-V-Exports\DC01\
+E:\Hyper-V-Backups\
 ```
 
-The external backup drive is undergoing BitLocker encryption.
+### Recovery Validation
 
-Future work includes Active Directory system-state backups, isolated restoration testing, and backup automation.
+On November 16, 2026, both DC01 and CLIENT01 were successfully restored as independent Hyper-V virtual machines from previously created exports.
+
+CLIENT01 successfully booted and supported offline Windows authentication.
+
+DC01 successfully booted and demonstrated functioning Active Directory Domain Services, DNS, domain controller discovery, and SYSVOL initialization within a dedicated isolated recovery network.
+
+The recovery exercise also demonstrated Active Directory VM-Generation ID safeguards and included troubleshooting of DFS Replication configuration access.
+
+Remaining work: A complete backup execution using the revised script configuration, Active Directory-aware system-state recovery testing, and investigation of the domain controller's Windows Time advertising warning.
+
+These tests establish VM-level recoverability but do not constitute a complete Active Directory forest disaster-recovery validation.
+
+For implementation details, recovery procedures, test results, and limitations, see the Hyper-V Backup Automation documentation.
 
 ## Project Roadmap
 
-- [x] Configure Hyper-V host and isolated networking
-- [x] Deploy Windows Server 2025 domain controller
-- [x] Configure Active Directory and DNS
-- [x] Create organizational units and departmental security groups
-- [x] Provision employee accounts and group memberships
-- [x] Configure dedicated host administrator and standard-user accounts
-- [x] Establish Git and GitHub repository
-- [ ] Complete BitLocker encryption and validation
-- [ ] Deploy Windows 11 domain-joined client
-- [ ] Implement Group Policy Objects (GPOs)
-- [ ] Develop reusable PowerShell administration scripts
-- [ ] Configure security auditing and event log analysis
-- [ ] Test Active Directory and virtual machine recovery procedures
+### Completed Milestones
+
+- [x] Configure Hyper-V host and isolated networking.
+- [x] Deploy Windows Server 2025 domain controller.
+- [x] Configure Active Directory and DNS.
+- [x] Create organizational units and departmental security groups.
+- [x] Provision fictional employee accounts and group memberships.
+- [x] Configure dedicated host administrator and standard-user accounts.
+- [x] Establish Git and GitHub repository.
+- [x] Configure and validate BitLocker encryption on host and backup storage.
+- [x] Deploy Windows 11 Enterprise domain-joined client (CLIENT01).
+- [x] Develop and document PowerShell based Hyper-V backup automation.
+- [x] Validate exported virtual hard disks.
+- [x] Successfully perform isolated VM-level recovery tests for DC01 and CLIENT01.
+- [x] Document recovery procedures, test results, and limitations.
+
+### Upcoming Milestones
+
+- [] Validate a complete backup run using the revised configuration.
+- [] Implement and test Active Directory Group Policy Objects (GPOs).
+- [] Develop reusable PowerShell administration scripts.
+- [] Configure Windows security auditing and event log analysis.
+- [] Investigate and resolve the domain controller's Windows Time advertising warning.
+- [] Implement additional Active Directory security hardening.
+- [] Explore centralized log collection and security monitoring.
+- [] Develop and test Active Directory-aware system-state backup and recovery procedures.
 
 ## Repository Structure
 
@@ -153,6 +198,10 @@ windows-enterprise-homelab/
 │   └── 04-ClientDeployment/
 ├── scripts/
 │   ├── active-directory/
+│   ├── backup/
+│   │   ├── Backup-HyperVVMs.ps1
+│   │   ├── backup-config.example.ps1
+│   │   └── README.md
 │   └── infrastructure/
 ├── screenshots/
 ├── .gitignore
@@ -172,4 +221,12 @@ All employee identities and organizational details are fictional and intended fo
 
 **Active Development — November 2026**
 
-The core Active Directory environment is operational. Current work focuses on host security hardening, documentation, and preparation for Windows client deployment.
+The core Windows enterprise environment is operational, including the ARGUS Hyper-V host, DC01 domain controller, and domain-joined CLIENT01 workstation.
+
+Foundational Active Directory configuration, departmental security groups, account provisioning, host security controls, encrypted backup storage, and Hyper-V backup automation have been established.
+
+Controlled recovery exercises completed on November 16, 2026, demonstrated successful VM-level restoration of both DC01 and CLIENT01. Recovery findings, troubleshooting procedures, and outstanding limitations are documented in the backup project README.
+
+Current development focus: Active Directory administration, Group Policy implementation, endpoint security configuration, and PowerShell automation.
+
+Future work will expand into Windows security auditing, centralized event collection, and practical cybersecurity monitoring exercises.
