@@ -178,14 +178,14 @@ For implementation details, recovery procedures, test results, and limitations, 
 
 ### Upcoming Milestones
 
-- [] Validate a complete backup run using the revised configuration.
-- [] Implement and test Active Directory Group Policy Objects (GPOs).
-- [] Develop reusable PowerShell administration scripts.
-- [] Configure Windows security auditing and event log analysis.
-- [] Investigate and resolve the domain controller's Windows Time advertising warning.
-- [] Implement additional Active Directory security hardening.
-- [] Explore centralized log collection and security monitoring.
-- [] Develop and test Active Directory-aware system-state backup and recovery procedures.
+- [ ] Validate a complete backup run using the revised configuration.
+- [ ] Implement and test Active Directory Group Policy Objects (GPOs).
+- [ ] Develop reusable PowerShell administration scripts.
+- [ ] Configure Windows security auditing and event log analysis.
+- [ ] Investigate and resolve the domain controller's Windows Time advertising warning.
+- [ ] Implement additional Active Directory security hardening.
+- [ ] Explore centralized log collection and security monitoring.
+- [ ] Develop and test Active Directory-aware system-state backup and recovery procedures.
 
 ## Repository Structure
 
