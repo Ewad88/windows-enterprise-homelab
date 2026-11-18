@@ -110,7 +110,23 @@ Implemented security measures include:
 - BitLocker encryption for the ARGUS host storage and external backup drive.
 - Offline backup storage disconnected when not in use.
 
-Additional Active Directory security hardening, Group Policy configuration, and centralized security auditing are planned.
+
+### Group Policy — Workstation Security Baseline
+
+A custom Active Directory Group Policy Object (`GPO-Workstation-Security-Baseline`) has been deployed to the `CORP/Workstations` organizational unit.
+
+The initial security baseline enforces a 900-second (15-minute) interactive session inactivity timeout on domain-joined workstations.
+
+Deployment was validated on CLIENT01 using:
+
+- `gpupdate /force` to refresh Group Policy.
+- `gpresult /r /scope computer` to confirm GPO application.
+- Windows Registry inspection to verify the configured timeout.
+- Functional testing to confirm automatic workstation locking.
+
+**Documentation:** [Workstation Security Baseline — Group Policy](docs/03-GroupPolicy/01-workstation-security-baseline.md)
+
+Additional Active Directory security hardening, Group Policy configurations, and centralized security auditing are planned.
 
 ### Administrative Account Separation
 
@@ -175,11 +191,12 @@ For implementation details, recovery procedures, test results, and limitations, 
 - [x] Validate exported virtual hard disks.
 - [x] Successfully perform isolated VM-level recovery tests for DC01 and CLIENT01.
 - [x] Document recovery procedures, test results, and limitations.
+- [x] Deploy and validate workstation inactivity security policy using Active Directory Group Policy.
 
 ### Upcoming Milestones
 
 - [ ] Validate a complete backup run using the revised configuration.
-- [ ] Implement and test Active Directory Group Policy Objects (GPOs).
+- [ ] Expand workstation security baseline with additional Group Policy configurations.
 - [ ] Develop reusable PowerShell administration scripts.
 - [ ] Configure Windows security auditing and event log analysis.
 - [ ] Investigate and resolve the domain controller's Windows Time advertising warning.
