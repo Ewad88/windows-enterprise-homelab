@@ -110,23 +110,34 @@ Implemented security measures include:
 - BitLocker encryption for the ARGUS host storage and external backup drive.
 - Offline backup storage disconnected when not in use.
 
-
 ### Group Policy — Workstation Security Baseline
 
-A custom Active Directory Group Policy Object (`GPO-Workstation-Security-Baseline`) has been deployed to the `CORP/Workstations` organizational unit.
+A custom Active Directory Group Policy Object (`GPO-Workstation-Security-Baseline`) has been deployed to the `CORP/Workstations` organizational unit to centrally manage security settings for domain-joined workstations.
 
-The initial security baseline enforces a 900-second (15-minute) interactive session inactivity timeout on domain-joined workstations.
+The workstation security baseline currently implements two controls:
 
-Deployment was validated on CLIENT01 using:
+**1. Interactive Session Inactivity Timeout**
 
-- `gpupdate /force` to refresh Group Policy.
-- `gpresult /r /scope computer` to confirm GPO application.
-- Windows Registry inspection to verify the configured timeout.
-- Functional testing to confirm automatic workstation locking.
+- Enforces a 900-second (15-minute) interactive session inactivity limit.
+- Automatically locks an inactive workstation to reduce the risk of unauthorized access.
+- Validated on CLIENT01 through Group Policy reporting, Windows Registry inspection, and functional testing.
 
 **Documentation:** [Workstation Security Baseline — Group Policy](docs/03-GroupPolicy/01-workstation-security-baseline.md)
 
-Additional Active Directory security hardening, Group Policy configurations, and centralized security auditing are planned.
+**2. Windows Defender Firewall — Domain Profile**
+
+- Centrally enforces Windows Defender Firewall for the Domain network profile.
+- Blocks unmatched inbound connections by default while permitting traffic allowed by applicable firewall rules.
+- Allows outbound connections by default unless explicitly blocked.
+- Leaves the Private and Public firewall profiles unconfigured within this GPO.
+- Validated on CLIENT01 using `gpupdate /force`, `gpresult`, effective firewall policy inspection, and Windows Registry verification.
+- Confirmed continued connectivity to DC01 over TCP port 389 (LDAP).
+
+**Documentation:** [Windows Defender Firewall — Group Policy Deployment and Validation](docs/03-GroupPolicy/02-windows-defender-firewall.md)
+
+Together, these controls establish a centrally managed workstation security baseline through Active Directory Group Policy.
+
+Future development will expand endpoint security hardening, Group Policy configurations, and centralized Windows security auditing.
 
 ### Administrative Account Separation
 
@@ -192,6 +203,7 @@ For implementation details, recovery procedures, test results, and limitations, 
 - [x] Successfully perform isolated VM-level recovery tests for DC01 and CLIENT01.
 - [x] Document recovery procedures, test results, and limitations.
 - [x] Deploy and validate workstation inactivity security policy using Active Directory Group Policy.
+- [x] Configure and validate Windows Defender Firewall Domain profile enforcement through Active Directory Group Policy.
 
 ### Upcoming Milestones
 
