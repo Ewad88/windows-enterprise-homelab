@@ -112,32 +112,23 @@ Implemented security measures include:
 
 ### Group Policy — Workstation Security Baseline
 
-A custom Active Directory Group Policy Object (`GPO-Workstation-Security-Baseline`) has been deployed to the `CORP/Workstations` organizational unit to centrally manage security settings for domain-joined workstations.
+A custom Active Directory Group Policy Object (`GPO-Workstation-Security-Baseline`) has been deployed to the `CORP/Workstations` organizational unit.
 
-The workstation security baseline currently implements two controls:
+The workstation security baseline currently includes:
 
-**1. Interactive Session Inactivity Timeout**
+- **Interactive Session Security:** Enforces a 900-second (15-minute) inactivity timeout to automatically lock unattended workstations.
+- **Windows Defender Firewall:** Enables the Domain Profile firewall with inbound connections blocked by default and outbound connections allowed.
+- **Windows Security Auditing:** Enables successful process creation auditing (Event ID 4688), including command-line arguments, to improve endpoint visibility and security investigations.
 
-- Enforces a 900-second (15-minute) interactive session inactivity limit.
-- Automatically locks an inactive workstation to reduce the risk of unauthorized access.
-- Validated on CLIENT01 through Group Policy reporting, Windows Registry inspection, and functional testing.
+Policy deployment and enforcement were validated on CLIENT01 using Group Policy refreshes, effective policy inspection, Windows Registry queries, and controlled functional testing.
 
-**Documentation:** [Workstation Security Baseline — Group Policy](docs/03-GroupPolicy/01-workstation-security-baseline.md)
+Security auditing validation also included correlating successful logon events (4624), special privilege assignment events (4672), and process creation events (4688) using a shared Windows Logon ID.
 
-**2. Windows Defender Firewall — Domain Profile**
+**Group Policy Lab Documentation:**
 
-- Centrally enforces Windows Defender Firewall for the Domain network profile.
-- Blocks unmatched inbound connections by default while permitting traffic allowed by applicable firewall rules.
-- Allows outbound connections by default unless explicitly blocked.
-- Leaves the Private and Public firewall profiles unconfigured within this GPO.
-- Validated on CLIENT01 using `gpupdate /force`, `gpresult`, effective firewall policy inspection, and Windows Registry verification.
-- Confirmed continued connectivity to DC01 over TCP port 389 (LDAP).
-
-**Documentation:** [Windows Defender Firewall — Group Policy Deployment and Validation](docs/03-GroupPolicy/02-windows-defender-firewall.md)
-
-Together, these controls establish a centrally managed workstation security baseline through Active Directory Group Policy.
-
-Future development will expand endpoint security hardening, Group Policy configurations, and centralized Windows security auditing.
+- [Lab 01 — Workstation Security Baseline](docs/03-GroupPolicy/01-workstation-security-baseline.md)
+- [Lab 02 — Windows Defender Firewall](docs/03-GroupPolicy/02-windows-defender-firewall.md)
+- [Lab 03 — Windows Security Auditing](docs/03-GroupPolicy/03-windows-security-auditing.md)
 
 ### Administrative Account Separation
 
@@ -203,14 +194,13 @@ For implementation details, recovery procedures, test results, and limitations, 
 - [x] Successfully perform isolated VM-level recovery tests for DC01 and CLIENT01.
 - [x] Document recovery procedures, test results, and limitations.
 - [x] Deploy and validate workstation inactivity security policy using Active Directory Group Policy.
-- [x] Configure and validate Windows Defender Firewall Domain profile enforcement through Active Directory Group Policy.
+- [x] Deploy and validate Windows Defender Firewall Domain Profile settings through Group Policy.
+- [x] Configure and validate Windows Security auditing, process creation monitoring, and event correlation.
 
 ### Upcoming Milestones
 
 - [ ] Validate a complete backup run using the revised configuration.
-- [ ] Expand workstation security baseline with additional Group Policy configurations.
 - [ ] Develop reusable PowerShell administration scripts.
-- [ ] Configure Windows security auditing and event log analysis.
 - [ ] Investigate and resolve the domain controller's Windows Time advertising warning.
 - [ ] Implement additional Active Directory security hardening.
 - [ ] Explore centralized log collection and security monitoring.
